@@ -1,3 +1,4 @@
 include ':zxing-android-embedded'
 include ':sample'
 include ':sample-nosupport'
+include ':phileog-zxing'
