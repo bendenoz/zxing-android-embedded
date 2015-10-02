@@ -7,12 +7,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.google.zxing.ResultPoint;
+import com.google.zxing.client.android.BeepManager;
 import com.journeyapps.barcodescanner.BarcodeCallback;
 import com.journeyapps.barcodescanner.BarcodeResult;
 import com.journeyapps.barcodescanner.CompoundBarcodeView;
+
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -26,23 +29,27 @@ import java.util.List;
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private CompoundBarcodeView barcodeView;
+    private BeepManager beepManager;
+    private String lastCode = "";
 
     private BarcodeCallback callback = new BarcodeCallback() {
         @Override
         public void barcodeResult(BarcodeResult result) {
             if (result.getText() != null) {
                 barcodeView.setStatusText(result.getText());
-
-                String[] codes = result.getText().split(":");
-                if (codes[0].equals("PHG") && codes[1].equals("FATAG")) {
-                    // we have a Phileog QR Code !!
-                    new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/scan/" + codes[2]);
+                if (! result.getText().equals(lastCode)) {
+                    lastCode = result.getText();
+                    String[] codes = result.getText().split(":");
+                    if (codes[0].equals("PHG") && codes[1].equals("FATAG")) {
+                        // we have a Phileog QR Code !!
+                        new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/scan/" + codes[2]);
+                    }
+                    //Added preview of scanned barcode
+                    ImageView imageView = (ImageView) findViewById(R.id.barcodePreview);
+                    imageView.setImageBitmap(result.getBitmapWithResultPoints(Color.YELLOW));
                 }
             }
 
-            //Added preview of scanned barcode
-            ImageView imageView = (ImageView) findViewById(R.id.barcodePreview);
-            imageView.setImageBitmap(result.getBitmapWithResultPoints(Color.YELLOW));
         }
 
         @Override
@@ -56,9 +63,12 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         barcodeView = (CompoundBarcodeView) findViewById(R.id.barcode_scanner);
         barcodeView.decodeContinuous(callback);
+
+        beepManager = new BeepManager(this);
     }
 
     @Override
@@ -66,6 +76,7 @@ public class MainActivity extends Activity {
         super.onResume();
 
         barcodeView.resume();
+        beepManager.updatePrefs();
     }
 
     @Override
@@ -73,6 +84,7 @@ public class MainActivity extends Activity {
         super.onPause();
 
         barcodeView.pause();
+        beepManager.close();
     }
 
     public void pause(View view) {
@@ -81,6 +93,7 @@ public class MainActivity extends Activity {
 
     public void resume(View view) {
         barcodeView.resume();
+        lastCode = "";
     }
 
     public void url_test(View view) {
@@ -88,8 +101,9 @@ public class MainActivity extends Activity {
         String code = "PHG:FATAG:0001";
         String[] codes = code.split(":");
         if (codes[0].equals("PHG") && codes[1].equals("FATAG")) {
-            new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/" + codes[2]);
+            new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/scan/" + codes[2]);
         }
+        // beepManager.playBeepSoundAndVibrate();
     }
 
     public void triggerScan(View view) {
@@ -118,7 +132,8 @@ public class MainActivity extends Activity {
         protected void onPostExecute(Boolean b) {
             // showDialog("Downloaded " + result + " bytes");
             // FIXME: BEEP GOOD / BAD
-            Log.v("badge","onPostExecute: " + b);
+            Log.v("badge", "onPostExecute: " + b);
+            if (b) beepManager.playBeepSoundAndVibrate();
             super.onPostExecute(b);
         }
     }
