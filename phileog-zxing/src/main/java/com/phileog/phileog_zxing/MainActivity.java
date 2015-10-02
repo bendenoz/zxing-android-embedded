@@ -32,6 +32,8 @@ public class MainActivity extends Activity {
     private BeepManager beepManager;
     private String lastCode = "";
 
+    private String BackendURL = "http://www.dev.phileog.com/agorasv2/";
+
     private BarcodeCallback callback = new BarcodeCallback() {
         @Override
         public void barcodeResult(BarcodeResult result) {
@@ -42,7 +44,7 @@ public class MainActivity extends Activity {
                     String[] codes = result.getText().split(":");
                     if (codes[0].equals("PHG") && codes[1].equals("FATAG")) {
                         // we have a Phileog QR Code !!
-                        new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/scan/" + codes[2]);
+                        new backendUpdate().execute(BackendURL + "badge/scan/" + codes[2]);
                     }
                     //Added preview of scanned barcode
                     ImageView imageView = (ImageView) findViewById(R.id.barcodePreview);
@@ -101,7 +103,7 @@ public class MainActivity extends Activity {
         String code = "PHG:FATAG:0001";
         String[] codes = code.split(":");
         if (codes[0].equals("PHG") && codes[1].equals("FATAG")) {
-            new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/scan/" + codes[2]);
+            new backendUpdate().execute(BackendURL + "badge/scan/" + codes[2]);
         }
         // beepManager.playBeepSoundAndVibrate();
     }
@@ -133,7 +135,11 @@ public class MainActivity extends Activity {
             // showDialog("Downloaded " + result + " bytes");
             // FIXME: BEEP GOOD / BAD
             Log.v("badge", "onPostExecute: " + b);
-            if (b) beepManager.playBeepSoundAndVibrate();
+            if (b) {
+                    beepManager.playBeepSoundAndVibrate();
+            } else {
+                lastCode = ""; // give another chance
+            }
             super.onPostExecute(b);
         }
     }
@@ -141,7 +147,10 @@ public class MainActivity extends Activity {
     private Boolean GetURL(String myurl) throws IOException {
         try {
             URL url = new URL(myurl);
+            Log.v("badge", "url: " + myurl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestProperty("Pragma", "no-cache");
+            conn.setRequestProperty("Cache-Control", "no-cache");
             conn.connect();
             int response = conn.getResponseCode();
             Log.v("badge", "Resp code: " + response);
