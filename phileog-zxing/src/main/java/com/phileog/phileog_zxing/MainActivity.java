@@ -1,7 +1,6 @@
 package com.phileog.phileog_zxing;
 
 import android.app.Activity;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,6 +14,9 @@ import com.journeyapps.barcodescanner.BarcodeCallback;
 import com.journeyapps.barcodescanner.BarcodeResult;
 import com.journeyapps.barcodescanner.CompoundBarcodeView;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -30,7 +32,14 @@ public class MainActivity extends Activity {
         public void barcodeResult(BarcodeResult result) {
             if (result.getText() != null) {
                 barcodeView.setStatusText(result.getText());
+
+                String[] codes = result.getText().split(":");
+                if (codes[0].equals("PHG") && codes[1].equals("FATAG")) {
+                    // we have a Phileog QR Code !!
+                    new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/scan/" + codes[2]);
+                }
             }
+
             //Added preview of scanned barcode
             ImageView imageView = (ImageView) findViewById(R.id.barcodePreview);
             imageView.setImageBitmap(result.getBitmapWithResultPoints(Color.YELLOW));
@@ -75,7 +84,12 @@ public class MainActivity extends Activity {
     }
 
     public void url_test(View view) {
-        Log.v("badge","coming soon");
+        Log.v("badge","Test URL");
+        String code = "PHG:FATAG:0001";
+        String[] codes = code.split(":");
+        if (codes[0].equals("PHG") && codes[1].equals("FATAG")) {
+            new backendUpdate().execute("http://www.dev.phileog.com/agorasv2/badge/" + codes[2]);
+        }
     }
 
     public void triggerScan(View view) {
@@ -87,17 +101,38 @@ public class MainActivity extends Activity {
         return barcodeView.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event);
     }
 
+    /* http://developer.android.com/training/basics/network-ops/connecting.html */
     private class backendUpdate extends AsyncTask<String, Void, Boolean> {
 
         @Override
         protected Boolean doInBackground(String... urls) {
-            return true;
+            try {
+                return GetURL(urls[0]);
+            } catch(IOException e) {
+                Log.v("badge", "doInBackground error");
+                return false;
+            }
         }
 
         @Override
         protected void onPostExecute(Boolean b) {
             // showDialog("Downloaded " + result + " bytes");
+            // FIXME: BEEP GOOD / BAD
+            Log.v("badge","onPostExecute: " + b);
             super.onPostExecute(b);
+        }
+    }
+
+    private Boolean GetURL(String myurl) throws IOException {
+        try {
+            URL url = new URL(myurl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.connect();
+            int response = conn.getResponseCode();
+            Log.v("badge", "Resp code: " + response);
+            return (response == 200); // keep it simple...
+        } finally {
+            // Log.v("badge", "GetURL error");
         }
     }
 

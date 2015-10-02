@@ -21,8 +21,8 @@ subprojects {
     group = 'com.journeyapps'
     apply plugin: 'android-sdk-manager'
 
-    ext.androidBuildTools = '21.1.2'
-    ext.androidTargetSdk = 21
+    ext.androidBuildTools = '23.0.1'
+    ext.androidTargetSdk = 23
     ext.zxingCore = 'com.google.zxing:core:3.2.0'
 
     if (PUBLISH_PROJECTS.contains(project.name)) {
