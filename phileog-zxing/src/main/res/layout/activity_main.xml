@@ -3,6 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView2"
+        android:layout_alignTop="@+id/barcode_scanner"
+        android:layout_alignParentTop="false"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="false" />
+
     <com.journeyapps.barcodescanner.CompoundBarcodeView
         android:id="@+id/barcode_scanner"
         android:layout_width="match_parent"
@@ -33,11 +43,11 @@
             android:onClick="resume" />
 
 
-        <Button
+        <!-- Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="URL Test"
-            android:onClick="url_test" />
+            android:onClick="url_test" / -->
     </LinearLayout>
 
     <View
@@ -49,10 +59,17 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/centerHorizont"
+        android:layout_toRightOf="@+id/centerHorizont"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignTop="@id/buttonsLayout"
         android:id="@+id/barcodePreview" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
